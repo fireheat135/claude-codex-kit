@@ -15,6 +15,16 @@ abspath() {
   printf '%s/%s\n' "$(cd "$dir" && pwd)" "$(basename "$1")"
 }
 
+# safe_workdir DIR — refuse to give Codex write access to $HOME or / (it could edit any file there).
+# Override with CODEX_ALLOW_BROAD_WORKDIR=1 only if you really mean it.
+safe_workdir() {
+  local d; d=$(cd "$1" && pwd -P) || return 1
+  if [ "${CODEX_ALLOW_BROAD_WORKDIR:-0}" != 1 ] && { [ "$d" = / ] || [ "$d" = "$(cd "$HOME" && pwd -P)" ]; }; then
+    echo "Refusing to let Codex write in $d (too broad). cd into a project folder or pass -C <dir>." >&2
+    return 3
+  fi
+}
+
 need_login() {
   codex login status >/dev/null 2>&1 && return 0
   echo "Codex is not logged in. Run: codex login --device-auth  (or: codex login)" >&2

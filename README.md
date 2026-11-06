@@ -17,6 +17,9 @@ Claude Code を司令塔に、Codex CLI（ChatGPT ログイン）を画像生成
 | `codex-review [--base main] ["重点"]` | 読み取り専用の敵対的レビュー。**自分の見解を先に書き、Codex には渡さない**（盲検） |
 | `codex-run [-C dir] "<指示>"` | 自己完結したタスクを Codex に委譲 |
 
+考える深さ（reasoning effort）の既定: `codex-image`=low、`codex-run`=medium、`codex-review`=Codex の設定どおり。
+`CODEX_IMAGE_EFFORT` / `CODEX_RUN_EFFORT` / `CODEX_REVIEW_EFFORT` で上書き可（low / medium / high / xhigh）。
+
 ## ローカル（macOS）
 ```bash
 git clone https://github.com/fireheat135/claude-codex-kit ~/claude-codex-kit

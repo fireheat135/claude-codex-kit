@@ -30,7 +30,7 @@ link() {
   local src=$1 dest=$2
   mkdir -p "$(dirname "$dest")"
   if [ -e "$dest" ] && [ ! -L "$dest" ]; then
-    mkdir -p "$BACKUP"; mv "$dest" "$BACKUP/$(echo "${dest#"$HOME"/}" | tr '/' '_')"
+    mkdir -p "$BACKUP"; mv "$dest" "$BACKUP/$(echo "${dest#"$HOME"/}" | sed 's#^\.##; s#/\.#/#g' | tr '/' '_')"
     say "backed up existing $dest -> $BACKUP"
   fi
   ln -sfn "$src" "$dest"; say "$dest -> $src"

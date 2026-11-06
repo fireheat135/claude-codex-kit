@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # Usage: codex-run [-C dir] "task"  -> delegate a self-contained task to Codex, print its final message.
-# Env: CODEX_RUN_TIMEOUT (sec, default 1200)
+# Env: CODEX_RUN_TIMEOUT (sec, default 1200), CODEX_RUN_EFFORT (reasoning effort, default medium)
 set -uo pipefail
 src=$0; while [ -L "$src" ]; do t=$(readlink "$src"); case $t in /*) src=$t ;; *) src=$(dirname "$src")/$t ;; esac; done
 # shellcheck source=_common.sh
 . "$(cd "$(dirname "$src")" && pwd)/_common.sh"
 dir=$PWD; if [ "${1:-}" = -C ]; then dir=$2; shift 2; fi
+safe_workdir "$dir" || exit $?
 need_login || exit $?
 out=$(mktemp)
-run_timeout "${CODEX_RUN_TIMEOUT:-1200}" codex exec --skip-git-repo-check -s workspace-write -C "$dir" -o "$out" "$*" \
+run_timeout "${CODEX_RUN_TIMEOUT:-1200}" codex exec --skip-git-repo-check -c model_reasoning_effort="${CODEX_RUN_EFFORT:-medium}" -s workspace-write -C "$dir" -o "$out" "$*" \
   </dev/null >&2 || echo "codex exit $?" >&2
 cat "$out"
