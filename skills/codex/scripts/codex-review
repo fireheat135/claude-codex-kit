@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Usage: codex-review [-C dir] [--base <ref>] ["focus"]
+# Blind, adversarial, read-only second opinion. Write your own view FIRST and never pass it here.
+# Env: CODEX_REVIEW_TIMEOUT (sec, default 600)
+set -uo pipefail
+src=$0; while [ -L "$src" ]; do t=$(readlink "$src"); case $t in /*) src=$t ;; *) src=$(dirname "$src")/$t ;; esac; done
+# shellcheck source=_common.sh
+. "$(cd "$(dirname "$src")" && pwd)/_common.sh"
+dir=$PWD; base=""
+while [ $# -gt 0 ]; do
+  case $1 in -C) dir=$2; shift 2 ;; --base) base=$2; shift 2 ;; *) break ;; esac
+done
+focus="${*:-none}"
+if [ -n "$base" ]; then target="the changes on the current branch compared to '$base' (git diff $base...HEAD)"
+else target="the uncommitted changes (git diff HEAD, plus untracked files)"; fi
+need_login || exit $?
+out=$(mktemp)
+run_timeout "${CODEX_REVIEW_TIMEOUT:-600}" codex exec --skip-git-repo-check --ephemeral -s read-only -C "$dir" -o "$out" \
+"Adversarial code review: find the strongest reasons this change should NOT ship. Target: ${target}.
+Inspect it yourself with git and file reads. Focus: ${focus}.
+Assume subtle failure until evidence says otherwise. Prioritize wrong results, data loss, broken invariants,
+races, empty/null/timeout cases, flaky or meaningless tests, security/trust boundaries, config drift.
+Only material findings with evidence, no style nits: file:line, what breaks, why, impact, concrete fix,
+confidence 0-1. End with one line: VERDICT: ship | needs-attention." </dev/null >&2 || echo "codex exit $?" >&2
+cat "$out"
